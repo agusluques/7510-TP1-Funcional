@@ -1,9 +1,9 @@
 (ns logical-interpreter
-	(:require [clojure.string :as str])
-)
-
-(defn clean [string]
-	 (str/trim string)
+	(:require [clojure.string :as str]
+		[clean :refer :all]
+		[fact :refer :all]
+		[rule :refer :all]
+		[resolver :refer :all])
 )
 
 (defn save-fact [fact]
@@ -11,12 +11,12 @@
 		fact-args (clean (subs fact (+ (str/index-of fact "(") 1) (str/index-of fact ")")))]
 
 		(let [list-args  (map clean (str/split fact-args #","))]
-			(hash-map (keyword (clean fact-key))  list-args)
+			(->Fact fact-key list-args)
 		)
 	)	
 )
 
-(defn save-rule [rule] false )
+(defn save-rule [rule] (->Rule "hola" "pep " '(1,2,3)) )
 
 (defn define-fact-or-rule [fact-or-rule]
 	(if (nil? (str/index-of fact-or-rule ":-"))
@@ -33,31 +33,26 @@
 )
 
 (defn exec-query-fact [database query]
-	(let [query-key (clean (subs query 0 (str/index-of query "(")))
-		query-args (clean (subs query (+ (str/index-of query "(") 1) (str/index-of query ")")))]
-		(let [fact-args (map #((% query-key)) database)]
-			(if (nil? fact-args) 
-				nil
-				true
-			)
-		)
-		
-	)
+	(println (map #(can-resolve-query? % query) database))
 
 )
 
 (defn exec-query-rule [database query]
-
+	nil
 
 )
 
 (defn exec-query [database query]
-	(let [result-fact (exec-query-fact database query)] 
-		(if (nil? result-fact)
-			(exec-query-rule database query)
-			result-fact
+	(let [rule-result (exec-query-rule database query)]
+		(if (nil? rule-result)
+			(let [fact-result (exec-query-fact database query)]
+				(if (nil? fact-result)
+					false
+					true
+				)
+			)
 		)
-	)
+	)		
 )
 
 (defn evaluate-query
