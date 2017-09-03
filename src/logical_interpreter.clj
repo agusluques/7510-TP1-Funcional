@@ -46,8 +46,7 @@
 
 )
 
-(defn exec-query-rule [database query]
-
+(defn exec-query-rule [database query] nil
 
 )
 
