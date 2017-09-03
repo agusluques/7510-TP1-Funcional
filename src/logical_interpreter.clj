@@ -1,9 +1,9 @@
 (ns logical-interpreter
-	(:require [clojure.string :as str])
-)
-
-(defn clean [string]
-	 (str/trim string)
+	(:require [clojure.string :as str]
+		[clean :refer :all]
+		[fact :refer :all]
+		[rule :refer :all]
+		[resolver :refer :all])
 )
 
 (defn save-fact [fact]
@@ -11,12 +11,25 @@
 		fact-args (clean (subs fact (+ (str/index-of fact "(") 1) (str/index-of fact ")")))]
 
 		(let [list-args  (map clean (str/split fact-args #","))]
-			(hash-map (keyword (clean fact-key))  list-args)
+			(->Fact fact-key list-args)
 		)
 	)	
 )
 
-(defn save-rule [rule] false )
+(defn save-rule [rule] 
+	(let [rule-key (clean (subs rule 0 (str/index-of rule "(")))
+		rule-args (clean (subs rule (+ (str/index-of rule "(") 1) (str/index-of rule ")")))
+		facts (clean (subs rule (+ (str/index-of rule ":-") 2) (str/index-of rule ".")))]
+
+		(let [list-args (map clean (str/split rule-args #","))
+			listof-facts (map clean (str/split facts #"(?<=\)),"))]
+			;;(println listof-facts)
+			(->Rule rule-key rule-args listof-facts)
+		)
+
+	)
+
+)
 
 (defn define-fact-or-rule [fact-or-rule]
 	(if (nil? (str/index-of fact-or-rule ":-"))
@@ -28,35 +41,32 @@
 (defn parse-database [database]
 	(if (nil? (str/index-of database ") "))
 		nil
-		(map define-fact-or-rule (remove empty? (str/split database #"\n")))
+		(println (map define-fact-or-rule (remove empty? (str/split database #"\n"))))
 	)
 )
 
 (defn exec-query-fact [database query]
-	(let [query-key (clean (subs query 0 (str/index-of query "(")))
-		query-args (clean (subs query (+ (str/index-of query "(") 1) (str/index-of query ")")))]
-		(let [fact-args (map #((% query-key)) database)]
-			(if (nil? fact-args) 
-				nil
-				true
-			)
-		)
-		
+	(if (= (empty? (remove false? (map #(resolve-query % query) database))) false)
+		true
+		false
 	)
 
 )
 
-(defn exec-query-rule [database query] nil
+
+(defn exec-query-rule [database query]
+	nil
 
 )
 
 (defn exec-query [database query]
-	(let [result-fact (exec-query-fact database query)] 
-		(if (nil? result-fact)
-			(exec-query-rule database query)
-			result-fact
+	(let [rule-result (exec-query-rule database query)]
+		(if (nil? rule-result)
+			(let [fact-result (exec-query-fact database query)]
+				fact-result
+			)
 		)
-	)
+	)		
 )
 
 (defn evaluate-query
@@ -66,7 +76,11 @@
 	(let [parsed-database (parse-database database)]
 		(if (nil? parsed-database)
 			nil
-			(exec-query parsed-database query)
+			(if (nil? (str/index-of query "("))
+				nil
+				(exec-query parsed-database query)
+			)
+			
 		)
 	)
 )
