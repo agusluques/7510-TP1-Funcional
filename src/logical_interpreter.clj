@@ -16,7 +16,20 @@
 	)	
 )
 
-(defn save-rule [rule] (->Rule "hola" "pep " '(1,2,3)) )
+(defn save-rule [rule] 
+	(let [rule-key (clean (subs rule 0 (str/index-of rule "(")))
+		rule-args (clean (subs rule (+ (str/index-of rule "(") 1) (str/index-of rule ")")))
+		facts (clean (subs rule (+ (str/index-of rule ":-") 2) (str/index-of rule ".")))]
+
+		(let [list-args (map clean (str/split rule-args #","))
+			listof-facts (map clean (str/split facts #"(?<=\)),"))]
+			;;(println listof-facts)
+			(->Rule rule-key rule-args listof-facts)
+		)
+
+	)
+
+)
 
 (defn define-fact-or-rule [fact-or-rule]
 	(if (nil? (str/index-of fact-or-rule ":-"))
@@ -28,7 +41,7 @@
 (defn parse-database [database]
 	(if (nil? (str/index-of database ") "))
 		nil
-		(map define-fact-or-rule (remove empty? (str/split database #"\n")))
+		(println (map define-fact-or-rule (remove empty? (str/split database #"\n"))))
 	)
 )
 
