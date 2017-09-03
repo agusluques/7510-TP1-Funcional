@@ -1,3 +1,3 @@
 (ns resolver)
 
-(defprotocol Resolver (can-resolve-query? [this query]))
+(defprotocol Resolver (resolve-query [this query]))

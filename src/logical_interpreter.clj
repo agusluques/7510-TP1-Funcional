@@ -33,7 +33,10 @@
 )
 
 (defn exec-query-fact [database query]
-	(println (map #(can-resolve-query? % query) database))
+	(if (= (empty? (remove false? (map #(resolve-query % query) database))) false)
+		true
+		false
+	)
 
 )
 
@@ -46,10 +49,7 @@
 	(let [rule-result (exec-query-rule database query)]
 		(if (nil? rule-result)
 			(let [fact-result (exec-query-fact database query)]
-				(if (nil? fact-result)
-					false
-					true
-				)
+				fact-result
 			)
 		)
 	)		
@@ -62,7 +62,11 @@
 	(let [parsed-database (parse-database database)]
 		(if (nil? parsed-database)
 			nil
-			(exec-query parsed-database query)
+			(if (nil? (str/index-of query "("))
+				nil
+				(exec-query parsed-database query)
+			)
+			
 		)
 	)
 )
