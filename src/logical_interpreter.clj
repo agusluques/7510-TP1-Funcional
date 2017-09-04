@@ -41,12 +41,12 @@
 (defn parse-database [database]
 	(if (nil? (str/index-of database ") "))
 		nil
-		(println (map define-fact-or-rule (remove empty? (str/split database #"\n"))))
+		(map define-fact-or-rule (remove empty? (str/split database #"\n")))
 	)
 )
 
 (defn exec-query-fact [database query]
-	(if (= (empty? (remove false? (map #(resolve-query % query) database))) false)
+	(if (= (empty? (remove nil? (remove false? (map #(resolve-query % query) database)))) false)
 		true
 		false
 	)
@@ -55,7 +55,15 @@
 
 
 (defn exec-query-rule [database query]
-	nil
+	
+	(let [result  (last (remove nil? (remove false? (map #(resolve-query % query) database))))]
+		;;(if (= (empty? (remove nil? (remove false? result))) false)
+		;	true
+		;	false
+		;)
+		(println result)
+	)
+
 
 )
 
