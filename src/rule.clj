@@ -27,10 +27,10 @@
 			(if (= query-name (:rule-name this))
 				(let [list-queryargs (map clean (str/split query-args #","))
 					list-ruleargs (map clean (str/split rule-args #","))]
-					(map clean (str/split (replace-params (str/join "," listof-facts) list-ruleargs list-queryargs) #"(?<=\)),"))
-
+					(str/join "|" (map clean (str/split (replace-params (str/join "," listof-facts) list-ruleargs list-queryargs) #"(?<=\)),")))
 
 				)
+				nil
 			)
 		)
 	)

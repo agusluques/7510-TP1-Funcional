@@ -46,22 +46,29 @@
 )
 
 (defn exec-query-fact [database query]
-	(if (= (empty? (remove nil? (remove false? (map #(resolve-query % query) database)))) false)
+	(if (= (empty? (remove false? (remove nil? (map #(resolve-query % query) database)))) false)
 		true
 		false
 	)
-
 )
+
 
 
 (defn exec-query-rule [database query]
 	
-	(let [result  (last (remove nil? (remove false? (map #(resolve-query % query) database))))]
-		;;(if (= (empty? (remove nil? (remove false? result))) false)
-		;	true
-		;	false
-		;)
-		(println result)
+	(let [result   (last (remove false? (remove true? (remove nil?  (map #(resolve-query % query) database)))))]
+		(if (nil? result)
+			nil
+			(let [facts (str/split result #"\|")]
+				(if (nil? facts)
+					(exec-query-fact database result)
+					(if (= (every? true? (map #(exec-query-fact database %) facts)) true)
+						true
+						false
+					)
+				)
+			)
+		)
 	)
 
 
@@ -73,6 +80,7 @@
 			(let [fact-result (exec-query-fact database query)]
 				fact-result
 			)
+			rule-result
 		)
 	)		
 )
